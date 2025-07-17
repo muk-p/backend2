@@ -15,7 +15,7 @@ const app = express();
 
 app.use(cors(
   {
-  origin: 'https://gaming-a0kz1gebv-mukaras-projects.vercel.app',
+  origin: 'https://gaming-a0kz1gebv-mukaras-projects.vercel.app/',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }
