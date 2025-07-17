@@ -13,7 +13,13 @@ require('dotenv').config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors(
+  {
+  origin: 'https://gaming-a0kz1gebv-mukaras-projects.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}
+));
 app.use(bodyParser.json());
 dotenv.config();
 app.use(express.json());
