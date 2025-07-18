@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const verifyToken = require('../middleware/verifyToken');
+const verifyRole = require('../middleware/verifyRole');
 const router = express.Router();
 
 // Get all sales
@@ -57,8 +58,7 @@ router.post('/', verifyToken, (req, res) => {
 });
 
 // Sales report
-router.get('/report', verifyToken, (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' });
+router.get('/report', verifyToken, verifyRole(['admin']), (req, res) => {
 
   const breakdownQuery = `
     SELECT 
