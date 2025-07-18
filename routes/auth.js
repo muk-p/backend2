@@ -37,7 +37,7 @@ router.post('/login', async (req, res) => {
 
 router.get('/me', verifyToken, async (req, res) => {
     try {
-        const user = await User.findByPk(req.user.id, { attributes: ['id', 'username', 'email'] });
+        const user = await User.findByPk(req.user.id, { attributes: ['id', 'username', 'email','role'] });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
