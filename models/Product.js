@@ -19,8 +19,8 @@ const Product = sequelize.define('Product', {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false
     },
-    imageUrl: {
-        type: DataTypes.STRING,
+    imageFile: {
+        type: DataTypes.BLOB('long'),
         allowNull: true
     }
 });
