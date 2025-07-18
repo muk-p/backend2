@@ -4,10 +4,8 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.addColumn('Users', 'role', {
       type: Sequelize.STRING,
-      defaultValue: 'worker',
-      validate: {
-        isIn: [['admin', 'worker']]
-      }
+      allowNull: false,
+      defaultValue: 'worker'
     });
   },
 
@@ -15,3 +13,4 @@ module.exports = {
     await queryInterface.removeColumn('Users', 'role');
   }
 };
+
