@@ -19,9 +19,13 @@ const Product = sequelize.define('Product', {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false
     },
-    imageUrl: {
-        type: DataTypes.STRING,
-        allowNull: true
+    imageFile: {
+        type: DataTypes.BLOB('long'),
+        allowNull: true,
+        get() {
+            const data = this.getDataValue('imageFile');
+            return data ? data.toString('base64') : null;
+        }
     }
 });
 
