@@ -1,6 +1,6 @@
 // File: routes/products.js
 const express = require('express');
-const db = require('../db');
+const Product = require('../models/Product');
 const verifyToken = require('../middleware/verifyToken');
 const upload = require('../middleware/upload');
 const router = express.Router();
@@ -9,95 +9,91 @@ const path = require('path');
 
 
 // ✅ GET all products
-router.get('/',  (req, res) => {
-  db.query('SELECT * FROM products', (err, results) => {
-    if (err) return res.status(500).json({ error: err });
-    res.json(results);
-  });
+router.get('/', async (req, res) => {
+  try {
+    const products = await Product.findAll();
+    res.json(products);
+  } catch (err) {
+    console.error('Error fetching products:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // ✅ POST: Add new product (admin only)
-router.post('/', verifyToken, upload.single('image'), (req, res) => {
+router.post('/', verifyToken, upload.single('image'), async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ message: 'Forbidden: Admins only' });
   }
 
   const { name, description, price, stock } = req.body;
-  const image = req.file ? req.file.filename : null;
+  const imageUrl = req.file ? req.file.filename : null;
 
   if (!name || !price || !stock) {
     return res.status(400).json({ message: 'Missing required fields' });
   }
 
-  const query = `
-    INSERT INTO products (name, description, price, stock, image)
-    VALUES (?, ?, ?, ?, ?)
-  `;
-
-  db.query(query, [name, description, price, stock, image], (err, result) => {
-    if (err) return res.status(500).json({ error: err });
+  try {
+    await Product.create({ name, description, price, stock, imageUrl });
     res.status(201).json({ message: 'Product added' });
-  });
+  } catch (err) {
+    console.error('Error adding product:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // ✅ PUT: Update product stock (admin/worker)
-router.put('/:id', verifyToken, upload.single('image'), (req, res) => {
+router.put('/:id', verifyToken, upload.single('image'), async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' });
 
   const productId = req.params.id;
   const { name, description, price, stock } = req.body;
 
-  // First, fetch existing product to get old image filename
-  db.query('SELECT image FROM products WHERE id = ?', [productId], (err, results) => {
-    if (err) return res.status(500).json(err);
-    if (results.length === 0) return res.status(404).json({ message: 'Product not found' });
+  try {
+    const product = await Product.findByPk(productId);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
 
-    const oldImage = results[0].image;
-    const newImage = req.file ? req.file.filename : oldImage;
+    const oldImageUrl = product.imageUrl;
+    const newImageUrl = req.file ? req.file.filename : oldImageUrl;
 
-    // Update query, set new image if uploaded
-    const query = `UPDATE products SET name = ?, description = ?, price = ?, stock = ?, image = ? WHERE id = ?`;
-    db.query(query, [name, description, price, stock, newImage, productId], (err2) => {
-      if (err2) return res.status(500).json(err2);
+    await product.update({ name, description, price, stock, imageUrl: newImageUrl });
 
-      // If image changed and old image exists, delete old file
-      if (req.file && oldImage) {
-        const oldImagePath = path.join(__dirname, '../uploads', oldImage);
-        fs.unlink(oldImagePath, (unlinkErr) => {
-          if (unlinkErr) console.error('Failed to delete old image:', unlinkErr);
-        });
-      }
+    if (req.file && oldImageUrl) {
+      const oldImagePath = path.join(__dirname, '../uploads', oldImageUrl);
+      fs.unlink(oldImagePath, (unlinkErr) => {
+        if (unlinkErr) console.error('Failed to delete old image:', unlinkErr);
+      });
+    }
 
-      res.json({ message: 'Product updated' });
-    });
-  });
+    res.json({ message: 'Product updated' });
+  } catch (err) {
+    console.error('Error updating product:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // ✅ DELETE: Remove product (admin only)
-router.delete('/:id', verifyToken, (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' });
 
-  const getQuery = 'SELECT image FROM products WHERE id = ?';
-  db.query(getQuery, [req.params.id], (err, results) => {
-    if (err) return res.status(500).json(err);
-    if (results.length === 0) return res.status(404).json({ message: 'Product not found' });
+  try {
+    const product = await Product.findByPk(req.params.id);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
 
-    const image = results[0].image;
-    const deleteQuery = 'DELETE FROM products WHERE id = ?';
+    const imageUrl = product.imageUrl;
+    await product.destroy();
 
-    db.query(deleteQuery, [req.params.id], (err) => {
-      if (err) return res.status(500).json(err);
+    if (imageUrl) {
+      const imagePath = path.join(__dirname, '..', 'uploads', imageUrl);
+      fs.unlink(imagePath, (fsErr) => {
+        if (fsErr && fsErr.code !== 'ENOENT') console.error('Error deleting image:', fsErr);
+      });
+    }
 
-      if (image) {
-        const imagePath = path.join(__dirname, '..', 'uploads', image);
-        fs.unlink(imagePath, (fsErr) => {
-          if (fsErr && fsErr.code !== 'ENOENT') console.error('Error deleting image:', fsErr);
-        });
-      }
-
-      res.json({ message: 'Product deleted successfully' });
-    });
-  });
+    res.json({ message: 'Product deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting product:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 module.exports = router;
