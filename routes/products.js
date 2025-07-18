@@ -2,6 +2,7 @@
 const express = require('express');
 const Product = require('../models/Product');
 const verifyToken = require('../middleware/verifyToken');
+const verifyRole = require('../middleware/verifyRole');
 const upload = require('../middleware/upload');
 const router = express.Router();
 const fs= require('fs');
@@ -20,10 +21,7 @@ router.get('/', async (req, res) => {
 });
 
 // ✅ POST: Add new product (admin only)
-router.post('/', verifyToken, upload.single('image'), async (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Forbidden: Admins only' });
-  }
+router.post('/', verifyToken, verifyRole(['admin']), upload.single('image'), async (req, res) => {
 
   const { name, description, price, stock } = req.body;
   const imageUrl = req.file ? req.file.filename : null;
@@ -42,8 +40,7 @@ router.post('/', verifyToken, upload.single('image'), async (req, res) => {
 });
 
 // ✅ PUT: Update product stock (admin/worker)
-router.put('/:id', verifyToken, upload.single('image'), async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' });
+router.put('/:id', verifyToken, verifyRole(['admin']), upload.single('image'), async (req, res) => {
 
   const productId = req.params.id;
   const { name, description, price, stock } = req.body;
@@ -72,8 +69,7 @@ router.put('/:id', verifyToken, upload.single('image'), async (req, res) => {
 });
 
 // ✅ DELETE: Remove product (admin only)
-router.delete('/:id', verifyToken, async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' });
+router.delete('/:id', verifyToken, verifyRole(['admin']), async (req, res) => {
 
   try {
     const product = await Product.findByPk(req.params.id);
