@@ -26,6 +26,7 @@ const Product = sequelize.define('Product', {
             const data = this.getDataValue('imageFile');
             return data ? data.toString('base64') : null;
         }
+
     }
 });
 
