@@ -31,6 +31,4 @@ app.use('/orders', ordersRoute);
 
 const PORT = process.env.PORT || 5000;
 
-sequelize.sync().then(() => {
-  app.listen(PORT, () => console.log(`SERVER is running on port ${PORT}`));
-});
+app.listen(PORT, () => console.log(`SERVER is running on port ${PORT}`));
