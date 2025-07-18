@@ -21,7 +21,12 @@ const Product = sequelize.define('Product', {
     },
     imageFile: {
         type: DataTypes.BLOB('long'),
-        allowNull: true
+        allowNull: true,
+        get() {
+            const data = this.getDataValue('imageFile');
+            return data ? data.toString('base64') : null;
+        }
+
     }
 });
 
