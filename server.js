@@ -7,7 +7,7 @@ const productRoutes = require('./routes/products');
 const salesRoutes = require('./routes/sales');
 const ordersRoute = require('./routes/orders');
 const bodyParser = require('body-parser');
-const sequelize = require('./db');
+const { sequelize } = require('./models');
 
 dotenv.config();
 
@@ -31,4 +31,6 @@ app.use('/orders', ordersRoute);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => console.log(`SERVER is running on port ${PORT}`));
+sequelize.sync().then(() => {
+  app.listen(PORT, () => console.log(`SERVER is running on port ${PORT}`));
+});

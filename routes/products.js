@@ -1,6 +1,6 @@
 // File: routes/products.js
 const express = require('express');
-const Product = require('../models/Product');
+const { Product } = require('../models');
 const verifyToken = require('../middleware/verifyToken');
 const verifyRole = require('../middleware/verifyRole');
 const upload = require('../middleware/upload');
@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
     res.json(products);
   } catch (err) {
     console.error('Error fetching products:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 });
 
