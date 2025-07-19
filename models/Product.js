@@ -24,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
             const data = this.getDataValue('imageFile');
             return data ? data.toString('base64') : null;
         }
+
     }
 });
 
