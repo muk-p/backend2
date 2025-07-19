@@ -1,7 +1,5 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('/app/db.js');
-
-const Product = sequelize.define('Product', {
+module.exports = (sequelize, DataTypes) => {
+  const Product = sequelize.define('Product', {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -19,10 +17,15 @@ const Product = sequelize.define('Product', {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false
     },
-    imageUrl: {
-        type: DataTypes.STRING,
-        allowNull: true
+    imageFile: {
+        type: DataTypes.BLOB('long'),
+        allowNull: true,
+        get() {
+            const data = this.getDataValue('imageFile');
+            return data ? data.toString('base64') : null;
+        }
     }
 });
 
-module.exports = Product;
+  return Product;
+};
